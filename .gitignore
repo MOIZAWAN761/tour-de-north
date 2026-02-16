@@ -1,0 +1,6 @@
+node_modules
+.env
+# Firebase service account
+src/config/*firebase-adminsdk*.json
+src/config/*.json
+D:\police-project\backend\src\config\mansehra-police-tourist-88e9e-firebase-adminsdk-fbsvc-ec2da30244.json
