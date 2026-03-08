@@ -4,6 +4,10 @@ import express from "express";
 import { JeepsPoliceController } from "./police.jeep.controller.js";
 import { upload } from "../jeep.helper.js";
 import {
+  authenticate,
+  authorize,
+} from "../../../../middlewares/auth.middleware.js";
+import {
   validateCreateDriver,
   validateUpdateDriver,
   validateUpdateDriverActiveStatus,
@@ -21,6 +25,11 @@ import {
 } from "../jeep.validation.js";
 
 const router = express.Router();
+
+/* ============================================
+   ALL ROUTES REQUIRE AUTH + ROLE
+============================================ */
+router.use(authenticate, authorize("admin", "superadmin", "police"));
 
 /* ============================================
    DRIVER ROUTES (ADMIN/POLICE)
@@ -48,7 +57,7 @@ router.get(
 );
 
 // Update driver
-router.put(
+router.patch(
   "/drivers/:driverId",
   validateUpdateDriver,
   JeepsPoliceController.updateDriver,
@@ -102,7 +111,7 @@ router.get("/jeeps", validateGetAllJeeps, JeepsPoliceController.getAllJeeps);
 router.get("/jeeps/:jeepId", validateJeepId, JeepsPoliceController.getJeepById);
 
 // Update jeep
-router.put(
+router.patch(
   "/jeeps/:jeepId",
   upload.single("image"),
   validateUpdateJeep,

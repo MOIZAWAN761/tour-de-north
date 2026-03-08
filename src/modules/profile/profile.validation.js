@@ -182,7 +182,7 @@ export const validateAdminUpdateUser = [
 
   body("role")
     .optional()
-    .isIn(["tourist", "admin", "superadmin"])
+    .isIn(["user", "admin", "superadmin","police"])
     .withMessage("Invalid role"),
 
   // Profile table fields

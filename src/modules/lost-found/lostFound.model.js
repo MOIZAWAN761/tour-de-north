@@ -875,9 +875,12 @@ export const LostFoundModel = {
      MATCHING OPERATIONS (for police/admin)
   ============================================ */
 
+  // // Find potential matches for lost item in found items
   // Find potential matches for lost item in found items
-  async findPotentialMatches(lostReportId) {
-    const query = `
+async findPotentialMatches(lostReportId) {
+  const query = `
+    SELECT *
+    FROM (
       SELECT 
         fr.*,
         u.name as user_name,
@@ -889,32 +892,70 @@ export const LostFoundModel = {
           END +
           CASE 
             WHEN fr.found_location ILIKE '%' || lr.lost_location || '%' 
-            OR lr.lost_location ILIKE '%' || fr.found_location || '%' 
+              OR lr.lost_location ILIKE '%' || fr.found_location || '%' 
             THEN 30
             ELSE 0
           END +
           CASE 
-            WHEN ABS(EXTRACT(EPOCH FROM (fr.found_date - lr.lost_date))/86400) <= 7 THEN 20
+            WHEN ABS(fr.found_date - lr.lost_date) <= 7 THEN 20
             ELSE 0
           END
         ) as match_score
-      FROM found_reports fr
+      FROM lost_reports lr
+      JOIN found_reports fr ON fr.status = 'active'
       LEFT JOIN users u ON fr.user_id = u.id
-      CROSS JOIN lost_reports lr
       WHERE lr.id = $1
-        AND fr.status = 'active'
-      HAVING match_score >= 30
-      ORDER BY match_score DESC
-      LIMIT 10;
-    `;
+    ) AS scored_matches
+    WHERE match_score >= 30
+    ORDER BY match_score DESC
+    LIMIT 10;
+  `;
 
-    const { rows } = await pool.query(query, [lostReportId]);
-    return rows;
-  },
+  const { rows } = await pool.query(query, [lostReportId]);
+  return rows;
+},
+  // async findPotentialMatches(lostReportId) {
+  //   const query = `
+  //     SELECT 
+  //       fr.*,
+  //       u.name as user_name,
+  //       u.phone as user_phone,
+  //       (
+  //         CASE 
+  //           WHEN fr.item_category = lr.item_category THEN 50
+  //           ELSE 0
+  //         END +
+  //         CASE 
+  //           WHEN fr.found_location ILIKE '%' || lr.lost_location || '%' 
+  //           OR lr.lost_location ILIKE '%' || fr.found_location || '%' 
+  //           THEN 30
+  //           ELSE 0
+  //         END +
+  //         CASE 
+  //           WHEN ABS(EXTRACT(EPOCH FROM (fr.found_date - lr.lost_date))/86400) <= 7 THEN 20
+  //           ELSE 0
+  //         END
+  //       ) as match_score
+  //     FROM found_reports fr
+  //     LEFT JOIN users u ON fr.user_id = u.id
+  //     CROSS JOIN lost_reports lr
+  //     WHERE lr.id = $1
+  //       AND fr.status = 'active'
+  //     HAVING match_score >= 30
+  //     ORDER BY match_score DESC
+  //     LIMIT 10;
+  //   `;
 
+  //   const { rows } = await pool.query(query, [lostReportId]);
+  //   return rows;
+  // },
+
+  // // Find potential matches for found item in lost items
   // Find potential matches for found item in lost items
-  async findLostMatches(foundReportId) {
-    const query = `
+async findLostMatches(foundReportId) {
+  const query = `
+    SELECT *
+    FROM (
       SELECT 
         lr.*,
         u.name as user_name,
@@ -926,28 +967,63 @@ export const LostFoundModel = {
           END +
           CASE 
             WHEN lr.lost_location ILIKE '%' || fr.found_location || '%' 
-            OR fr.found_location ILIKE '%' || lr.lost_location || '%' 
+              OR fr.found_location ILIKE '%' || lr.lost_location || '%' 
             THEN 30
             ELSE 0
           END +
           CASE 
-            WHEN ABS(EXTRACT(EPOCH FROM (fr.found_date - lr.lost_date))/86400) <= 7 THEN 20
+            WHEN ABS(fr.found_date - lr.lost_date) <= 7 THEN 20
             ELSE 0
           END
         ) as match_score
-      FROM lost_reports lr
+      FROM found_reports fr
+      JOIN lost_reports lr ON lr.status = 'active'
       LEFT JOIN users u ON lr.user_id = u.id
-      CROSS JOIN found_reports fr
       WHERE fr.id = $1
-        AND lr.status = 'active'
-      HAVING match_score >= 30
-      ORDER BY match_score DESC
-      LIMIT 10;
-    `;
+    ) AS scored_matches
+    WHERE match_score >= 30
+    ORDER BY match_score DESC
+    LIMIT 10;
+  `;
 
-    const { rows } = await pool.query(query, [foundReportId]);
-    return rows;
-  },
+  const { rows } = await pool.query(query, [foundReportId]);
+  return rows;
+},
+  // async findLostMatches(foundReportId) {
+  //   const query = `
+  //     SELECT 
+  //       lr.*,
+  //       u.name as user_name,
+  //       u.phone as user_phone,
+  //       (
+  //         CASE 
+  //           WHEN lr.item_category = fr.item_category THEN 50
+  //           ELSE 0
+  //         END +
+  //         CASE 
+  //           WHEN lr.lost_location ILIKE '%' || fr.found_location || '%' 
+  //           OR fr.found_location ILIKE '%' || lr.lost_location || '%' 
+  //           THEN 30
+  //           ELSE 0
+  //         END +
+  //         CASE 
+  //           WHEN ABS(EXTRACT(EPOCH FROM (fr.found_date - lr.lost_date))/86400) <= 7 THEN 20
+  //           ELSE 0
+  //         END
+  //       ) as match_score
+  //     FROM lost_reports lr
+  //     LEFT JOIN users u ON lr.user_id = u.id
+  //     CROSS JOIN found_reports fr
+  //     WHERE fr.id = $1
+  //       AND lr.status = 'active'
+  //     HAVING match_score >= 30
+  //     ORDER BY match_score DESC
+  //     LIMIT 10;
+  //   `;
+
+  //   const { rows } = await pool.query(query, [foundReportId]);
+  //   return rows;
+  // },
 
   /* ============================================
      STATISTICS (for admin)

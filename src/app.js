@@ -15,6 +15,7 @@ import publicNotificationRoutes from "./modules/notification/public/notification
 import policeNotificationRoutes from "./modules/notification/police/notification.police.route.js";
 import publicLostFoundRoutes from "./modules/lost-found/public/lostFound.public.route.js";
 import policeLostFoundRoutes from "./modules/lost-found/police/lostFound.police.route.js";
+import messagingRoutes from "./modules/messaging/messaging.routes.js"
 import {
   errorHandler,
   notFoundHandler,
@@ -26,7 +27,13 @@ const app = express();
 /* ---------------- GLOBAL MIDDLEWARES ---------------- */
 
 // Enable CORS (mobile app + admin panel)
-app.use(cors());
+// 
+app.use(
+  cors({
+    origin: "http://localhost:5173", // frontend URL
+    credentials: true, // if using cookies or auth headers
+  }),
+);
 
 // Parse incoming JSON
 app.use(express.json());
@@ -66,11 +73,24 @@ app.use("/api/hotel", publicHotelRoutes);
 app.use("/api/police/jeep", policeJeepRoutes);
 app.use("/api/jeep", publicJeepRoutes);
 
+// app.use("/api/sos", publicPanicAlarmRoutes);
+// app.use("/api/notifications", publicNotificationRoutes);
+// app.use("/api/police/sos", policePanicAlarmRoutes);
+// app.use("/api/police/notifications", policeNotificationRoutes);
+// app.use("/api/messaging", policeNotificationRoutes);
+
+
+// ✅ SOS Routes
 app.use("/api/sos", publicPanicAlarmRoutes);
-app.use("/api/notifications", publicNotificationRoutes);
 app.use("/api/police/sos", policePanicAlarmRoutes);
+
+// ✅ MESSAGING ROUTES - FIXED!
+app.use("/api/messages", messagingRoutes);
+
+// ✅ Notification Routes
+app.use("/api/notifications", publicNotificationRoutes);
 app.use("/api/police/notifications", policeNotificationRoutes);
-app.use("/api/messaging", policeNotificationRoutes);
+
 
 app.use("/api/public/lost-and-found", publicLostFoundRoutes);
 app.use("/api/police/lost-and-found", policeLostFoundRoutes);

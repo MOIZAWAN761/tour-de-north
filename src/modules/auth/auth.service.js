@@ -67,7 +67,7 @@ export class AuthService {
       cnic,
       passwordHash,
       phoneVerified: true, // Verified via Firebase
-      role: "tourist", // Default role
+      role: "user", // Default role
     });
 
     // 6️⃣ Register first trusted device
@@ -130,6 +130,7 @@ export class AuthService {
     const user = identifier.includes("@")
       ? await AuthModel.findUserByEmail(identifier)
       : await AuthModel.findUserByPhone(identifier);
+    console.log(user);
 
     if (!user) {
       // Log failed attempt
@@ -230,6 +231,7 @@ export class AuthService {
           code: "auth/otp-required",
           requiresOTP: true,
           reason: !isTrustedDevice ? "new_device" : "security_check",
+          
         };
       }
 

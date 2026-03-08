@@ -40,12 +40,19 @@ export const validateSignup = [
     .withMessage("Invalid email format")
     .normalizeEmail(),
 
+  // body("phone")
+  //   .trim()
+  //   .notEmpty()
+  //   .withMessage("Phone is required")
+  //   .matches(/^\d{10,15}$/)
+  //   .withMessage("Phone must contain only digits (10-15 digits)"),
+
   body("phone")
     .trim()
     .notEmpty()
     .withMessage("Phone is required")
-    .matches(/^\d{10,15}$/)
-    .withMessage("Phone must contain only digits (10-15 digits)"),
+    .matches(/^\+[1-9]\d{7,14}$/)
+    .withMessage("Phone must be in format +923123456789"),
 
   body("cnic")
     .trim()

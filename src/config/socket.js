@@ -63,7 +63,7 @@ export function initializeSocket(server) {
     socket.join(`user:${socket.user.id}`);
 
     // Join admin room if admin
-    if (["admin", "superadmin", "police"].includes(socket.user.role)) {
+    if (["admin", "superadmin"].includes(socket.user.role)) {
       socket.join("admin-room");
     }
 

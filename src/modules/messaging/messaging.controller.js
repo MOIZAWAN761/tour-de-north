@@ -11,7 +11,7 @@ export const MessagingController = {
       const { sosId } = req.params;
       const { message } = req.body;
       const userId = req.user.id;
-      const userType = req.user.role === "tourist" ? "user" : req.user.role;
+      const userType = req.user.role === "user" ? "user" : req.user.role;
 
       const newMessage = await MessagingService.sendMessage(
         parseInt(sosId),
@@ -38,7 +38,7 @@ export const MessagingController = {
       const { sosId } = req.params;
       const { page = 1, limit = 100 } = req.query;
       const userId = req.user.id;
-      const userType = req.user.role === "tourist" ? "user" : req.user.role;
+      const userType = req.user.role === "user" ? "user" : req.user.role;
 
       const conversation = await MessagingService.getConversationMessages(
         parseInt(sosId),
@@ -68,7 +68,7 @@ export const MessagingController = {
 
       let conversations;
 
-      if (userRole === "tourist") {
+      if (userRole === "user") {
         // User's conversations
         conversations = await MessagingService.getUserConversations(
           userId,
@@ -99,7 +99,7 @@ export const MessagingController = {
   async getUnreadCount(req, res, next) {
     try {
       const userId = req.user.id;
-      const userType = req.user.role === "tourist" ? "user" : req.user.role;
+      const userType = req.user.role === "user" ? "user" : req.user.role;
 
       const count = await MessagingService.getUnreadCount(userId, userType);
 
@@ -119,7 +119,7 @@ export const MessagingController = {
     try {
       const { sosId } = req.params;
       const userId = req.user.id;
-      const userType = req.user.role === "tourist" ? "user" : req.user.role;
+      const userType = req.user.role === "user" ? "user" : req.user.role;
 
       const result = await MessagingService.markConversationAsRead(
         parseInt(sosId),

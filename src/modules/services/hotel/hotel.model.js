@@ -123,7 +123,7 @@ export const HotelsModel = {
     order = "desc",
     limit = 20,
     offset = 0,
-    userId ,
+    userId,
   }) {
     let query = `
       SELECT 
@@ -242,11 +242,50 @@ export const HotelsModel = {
     return parseInt(rows[0].total);
   },
 
+  // /* ============================================
+  //    GET NEARBY HOTELS (by place location)
+  // ============================================ */
+
+  // async getNearbyHotels(placeLat, placeLon, radiusKm = 10, userId = null) {
+  //   let query = `
+  //     SELECT
+  //       h.*,
+  //       (
+  //         6371 * acos(
+  //           cos(radians($1)) * cos(radians(h.latitude)) *
+  //           cos(radians(h.longitude) - radians($2)) +
+  //           sin(radians($1)) * sin(radians(h.latitude))
+  //         )
+  //       ) AS distance
+  //   `;
+
+  //   if (userId) {
+  //     query += `,
+  //       EXISTS(SELECT 1 FROM saved_hotels WHERE user_id = $4 AND hotel_id = h.id) as is_saved
+  //     `;
+  //   }
+
+  //   query += `
+  //     FROM hotels h
+  //     WHERE h.is_active = TRUE
+  //     HAVING distance <= $3
+  //     ORDER BY distance ASC;
+  //   `;
+
+  //   const values = userId
+  //     ? [placeLat, placeLon, radiusKm, userId]
+  //     : [placeLat, placeLon, radiusKm];
+
+  //   const { rows } = await pool.query(query, values);
+  //   return rows;
+  // },
   /* ============================================
-     GET NEARBY HOTELS (by place location)
-  ============================================ */
+   GET NEARBY HOTELS (by place location)
+============================================ */
   async getNearbyHotels(placeLat, placeLon, radiusKm = 10, userId = null) {
     let query = `
+    SELECT *
+    FROM (
       SELECT 
         h.*,
         (
@@ -256,20 +295,26 @@ export const HotelsModel = {
             sin(radians($1)) * sin(radians(h.latitude))
           )
         ) AS distance
-    `;
+  `;
 
     if (userId) {
       query += `,
-        EXISTS(SELECT 1 FROM saved_hotels WHERE user_id = $4 AND hotel_id = h.id) as is_saved
-      `;
+        EXISTS(
+          SELECT 1 
+          FROM saved_hotels 
+          WHERE user_id = $4 
+          AND hotel_id = h.id
+        ) AS is_saved
+    `;
     }
 
     query += `
       FROM hotels h
       WHERE h.is_active = TRUE
-      HAVING distance <= $3
-      ORDER BY distance ASC;
-    `;
+    ) AS sub
+    WHERE distance <= $3
+    ORDER BY distance ASC;
+  `;
 
     const values = userId
       ? [placeLat, placeLon, radiusKm, userId]
@@ -279,8 +324,6 @@ export const HotelsModel = {
     return rows;
   },
 
-
- 
   /* ============================================
      UPDATE HOTEL
   ============================================ */
@@ -539,7 +582,7 @@ export const HotelsModel = {
   /* ============================================
      GET TRENDING HOTELS
   ============================================ */
-  async getTrendingHotels(limit = 10, userId ) {
+  async getTrendingHotels(limit = 10, userId) {
     let query = `
       SELECT 
         h.*

@@ -232,6 +232,57 @@ export function errorHandler(err, req, res, next) {
     message =
       "Messaging is disabled for this SOS (only available after acknowledgment and before resolution)";
   }
+  // ... (keep existing code, add this after SOS errors or before generic)
+
+  // 12. Messaging specific errors
+  if (
+    err.message &&
+    err.message.includes("Messaging will be enabled once an admin acknowledges")
+  ) {
+    status = 403;
+    code = "messaging/not-acknowledged";
+    message = err.message;
+  }
+
+  if (
+    err.message &&
+    err.message.includes("Messaging is disabled for resolved SOS")
+  ) {
+    status = 403;
+    code = "messaging/resolved";
+    message = err.message;
+  }
+
+  if (
+    err.message &&
+    err.message.includes("Only the assigned admin can message")
+  ) {
+    status = 403;
+    code = "messaging/unauthorized";
+    message = err.message;
+  }
+
+  if (err.message && err.message.includes("Messaging is not allowed")) {
+    status = 403;
+    code = "messaging/not-allowed";
+    message = err.message;
+  }
+
+  if (err.message && err.message.includes("SOS not found")) {
+    status = 404;
+    code = "messaging/sos-not-found";
+    message = err.message;
+  }
+
+  if (
+    err.message &&
+    err.message.includes("Access denied") &&
+    err.message.includes("conversation")
+  ) {
+    status = 403;
+    code = "messaging/access-denied";
+    message = err.message;
+  }
 
   if (err.message && err.message.includes("only update your own SOS")) {
     status = 403;

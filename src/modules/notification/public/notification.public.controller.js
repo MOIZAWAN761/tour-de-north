@@ -6,9 +6,14 @@ export const NotificationsPublicController = {
   /* ============================================
      GET MY NOTIFICATIONS
   ============================================ */
+  // src/modules/notification/public/notification.public.controller.js
+
+  // In notifications.public.controller.js
+
   async getMyNotifications(req, res, next) {
     try {
       const userId = req.user.id;
+      const userRole = req.user.role; // ✅ get role
       const {
         category = "all",
         isRead,
@@ -19,8 +24,9 @@ export const NotificationsPublicController = {
 
       const result = await NotificationsService.getUserNotifications({
         userId,
+        userRole,
         category,
-        isRead: isRead !== undefined ? isRead === "true" : undefined,
+        isRead,
         type,
         page: parseInt(page),
         limit: parseInt(limit),

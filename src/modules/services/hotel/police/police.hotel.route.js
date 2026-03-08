@@ -30,7 +30,7 @@ const router = Router();
 router.post(
   "/",
   authenticate,
-  authorize(["admin", "superadmin"]),
+  authorize("admin", "superadmin"),
   upload.single("image"),
   validateCreateHotel,
   PoliceHotelsController.createHotel,
@@ -40,7 +40,7 @@ router.post(
 router.patch(
   "/:hotelId",
   authenticate,
-  authorize(["admin", "superadmin"]),
+  authorize("admin", "superadmin"),
   upload.single("image"),
   validateUpdateHotel,
   PoliceHotelsController.updateHotel,
@@ -50,7 +50,7 @@ router.patch(
 router.patch(
   "/:hotelId/active-status",
   authenticate,
-  authorize(["admin", "superadmin"]),
+  authorize("admin", "superadmin"),
   validateUpdateActiveStatus,
   PoliceHotelsController.updateActiveStatus,
 );
@@ -59,7 +59,7 @@ router.patch(
 router.delete(
   "/:hotelId",
   authenticate,
-  authorize(["admin", "superadmin"]),
+  authorize("admin", "superadmin"),
   validateHotelId,
   PoliceHotelsController.deleteHotel,
 );
@@ -68,7 +68,7 @@ router.delete(
 router.post(
   "/:hotelId/images",
   authenticate,
-  authorize(["admin", "superadmin"]),
+  authorize("admin", "superadmin"),
   upload.single("image"),
   validateAddImage,
   PoliceHotelsController.addHotelImage,
@@ -78,7 +78,7 @@ router.post(
 router.delete(
   "/:hotelId/images/:imageId",
   authenticate,
-  authorize(["admin", "superadmin"]),
+  authorize("admin", "superadmin"),
   validateImageId,
   PoliceHotelsController.deleteHotelImage,
 );
@@ -87,7 +87,7 @@ router.delete(
 router.get(
   "/:hotelId/audit-history",
   authenticate,
-  authorize(["admin", "superadmin"]),
+  authorize("admin", "superadmin"),
   validateAuditHistory,
   PoliceHotelsController.getAuditHistory,
 );
@@ -100,7 +100,7 @@ router.get(
 router.get(
   "/",
   authenticate,
-  authorize(["admin", "superadmin", "police"]),
+  authorize("admin", "superadmin", "police"),
   validateGetAllHotels,
   PoliceHotelsController.getAllHotels,
 );
@@ -109,7 +109,7 @@ router.get(
 router.get(
   "/:hotelId",
   authenticate,
-  authorize(["admin", "superadmin", "police"]),
+  authorize("admin", "superadmin", "police"),
   validateHotelId,
   PoliceHotelsController.getHotelById,
 );

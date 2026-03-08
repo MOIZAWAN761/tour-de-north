@@ -165,7 +165,17 @@ export const JeepsPoliceController = {
   /* Create jeep with new driver */
   async createJeep(req, res, next) {
     try {
-      const { jeep, driver } = req.body;
+      // const { jeep, driver } = req.body;
+      const jeep = {
+        name: req.body.name,
+        region: req.body.region,
+        jeepNumber: req.body.jeepNumber,
+        capacity: req.body.capacity,
+        description: req.body.description,
+        vehicleType: req.body.vehicleType,
+      };
+
+      const driver = req.body.driver;
       const imageFile = req.file?.buffer;
 
       const result = await JeepsService.createJeep(

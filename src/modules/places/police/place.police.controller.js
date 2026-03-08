@@ -48,6 +48,7 @@ export const PlacesPoliceController = {
         page = 1,
         limit = 20,
       } = req.query;
+      console.log(req.user);
 
       // Admin can see all places (active and inactive)
       const result = await PlacesService.getAllPlaces({

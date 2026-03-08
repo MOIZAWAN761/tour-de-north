@@ -8,8 +8,6 @@ import {
   validateUpdateContext,
   validateSOSId,
   validateGetUserSOSList,
-  validateSendMessage,
-  validateGetMessages,
 } from "../panicAlarm.validation.js";
 import { authenticate } from "../../../middlewares/auth.middleware.js";
 
@@ -17,9 +15,13 @@ const router = Router();
 
 /* ============================================
    USER ROUTES (Authenticated)
+   
+   ⚠️ ORDER MATTERS! 
+   - Specific routes (POST /self, POST /other) FIRST
+   - Generic routes (GET /, GET /:sosId) LAST
 ============================================ */
 
-// Create SOS for self
+// ✅ POST routes first (specific paths)
 router.post(
   "/self",
   authenticate,
@@ -27,7 +29,6 @@ router.post(
   PanicAlarmPublicController.createSOSForSelf,
 );
 
-// Create SOS for other person
 router.post(
   "/other",
   authenticate,
@@ -35,7 +36,7 @@ router.post(
   PanicAlarmPublicController.createSOSForOther,
 );
 
-// Update SOS context (emergency details)
+// ✅ PATCH routes (specific paths)
 router.patch(
   "/:sosId/context",
   authenticate,
@@ -43,15 +44,15 @@ router.patch(
   PanicAlarmPublicController.updateSOSContext,
 );
 
-// Get my SOS list
+// ✅ GET / route (list) - BEFORE /:sosId
 router.get(
-  "/my-sos",
+  "/",
   authenticate,
   validateGetUserSOSList,
   PanicAlarmPublicController.getMySOSList,
 );
 
-// Get SOS by ID
+// ✅ GET /:sosId route LAST (catches all other GET requests)
 router.get(
   "/:sosId",
   authenticate,
@@ -59,105 +60,4 @@ router.get(
   PanicAlarmPublicController.getSOSById,
 );
 
-// Send message to admin
-// router.post(
-//   "/:sosId/messages",
-//   authenticate,
-//   validateSendMessage,
-//   PanicAlarmPublicController.sendMessage,
-// );
-
-// // Get messages
-// router.get(
-//   "/:sosId/messages",
-//   authenticate,
-//   validateGetMessages,
-//   PanicAlarmPublicController.getMessages,
-// );
-
 export default router;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// // src/modules/panicAlarm/public/panicAlarm.public.routes.js
-
-// import { Router } from "express";
-// import { PublicPanicAlarmController } from "./public.controller.js";
-// import { validate } from "../panicAlarm.validation.js";
-// import { authenticate } from "../../../middlewares/auth.middleware.js";
-
-// const router = Router();
-
-// /* ============================================
-//    CREATE SOS
-// ============================================ */
-// router.post(
-//   "/self",
-//   authenticate,
-//   validate("createSOSSelf"),
-//   PublicPanicAlarmController.createSOSSelf,
-// );
-
-// router.post(
-//   "/third-party",
-//   authenticate,
-//   validate("createSOSThirdParty"),
-//   PublicPanicAlarmController.createSOSThirdParty,
-// );
-
-// /* ============================================
-//    UPDATE SOS CONTEXT
-// ============================================ */
-// router.patch(
-//   "/:sosId/context",
-//   authenticate,
-//   validate("updateContext"),
-//   PublicPanicAlarmController.updateContext,
-// );
-
-// /* ============================================
-//    GET USER'S SOS LIST
-// ============================================ */
-// router.get("/my", authenticate, PublicPanicAlarmController.getMySOSList);
-
-// /* ============================================
-//    GET SOS DETAIL
-// ============================================ */
-// router.get(
-//   "/:sosId/detail",
-//   authenticate,
-//   PublicPanicAlarmController.getSOSDetail,
-// );
-
-// /* ============================================
-//    SOS MESSAGES
-// ============================================ */
-// router.get(
-//   "/:sosId/messages",
-//   authenticate,
-//   PublicPanicAlarmController.getSOSMessages,
-// );
-
-// router.post(
-//   "/:sosId/messages",
-//   authenticate,
-//   PublicPanicAlarmController.sendMessage,
-// );
-
-// export default router;

@@ -1,7 +1,7 @@
 // src/modules/messaging/messaging.service.js
 
 import { MessagingModel } from "./messaging.model.js";
-import { PanicAlarmModel } from "../panicAlarm/panicAlarm.model.js";
+import { PanicAlarmModel } from "../panic-alarm/panicAlarm.model.js";
 import { formatMessage, formatConversation } from "./messaging.helper.js";
 import { getIO } from "../../config/socket.js";
 
@@ -11,46 +11,39 @@ export class MessagingService {
   ============================================ */
   static async sendMessage(sosId, senderId, senderType, message) {
     try {
-      // 1. Check if messaging is allowed
       const permission = await MessagingModel.isMessagingAllowed(
         sosId,
         senderId,
         senderType,
       );
-
       if (!permission.allowed) {
         throw { status: 403, message: permission.reason };
       }
 
-      // 2. Create message
       const newMessage = await MessagingModel.createMessage(
         sosId,
         senderId,
         senderType,
         message,
       );
-
-      // 3. Get sender info for response
-      const messages = await MessagingModel.getConversationMessages(sosId, 1, 0);
+      const messages = await MessagingModel.getConversationMessages(
+        sosId,
+        1,
+        0,
+      );
       const formattedMessage = formatMessage(messages[0]);
 
-      // 4. Emit via WebSocket
       const io = getIO();
       const conversationInfo = await MessagingModel.getConversationInfo(sosId);
-
-      // Determine recipient
       const recipientId =
         senderType === "user"
           ? conversationInfo.acknowledged_by
           : conversationInfo.user_id;
 
-      // Emit to recipient's room
       io.to(`user:${recipientId}`).emit("new_message", {
         sosId,
         message: formattedMessage,
       });
-
-      // Emit to sender (for multi-device sync)
       io.to(`user:${senderId}`).emit("message_sent", {
         sosId,
         message: formattedMessage,
@@ -62,24 +55,90 @@ export class MessagingService {
       throw error;
     }
   }
+  // static async sendMessage(sosId, senderId, senderType, message) {
+  //   try {
+  //     // 1. Check if messaging is allowed
+  //     const permission = await MessagingModel.isMessagingAllowed(
+  //       sosId,
+  //       senderId,
+  //       senderType,
+  //     );
+
+  //     if (!permission.allowed) {
+  //       throw { status: 403, message: permission.reason };
+  //     }
+
+  //     // 2. Create message
+  //     const newMessage = await MessagingModel.createMessage(
+  //       sosId,
+  //       senderId,
+  //       senderType,
+  //       message,
+  //     );
+
+  //     // 3. Get sender info for response
+  //     const messages = await MessagingModel.getConversationMessages(
+  //       sosId,
+  //       1,
+  //       0,
+  //     );
+  //     const formattedMessage = formatMessage(messages[0]);
+
+  //     // 4. Emit via WebSocket
+  //     const io = getIO();
+  //     const conversationInfo = await MessagingModel.getConversationInfo(sosId);
+
+  //     // Determine recipient
+  //     const recipientId =
+  //       senderType === "user"
+  //         ? conversationInfo.acknowledged_by
+  //         : conversationInfo.user_id;
+
+  //     // Emit to recipient's room
+  //     io.to(`user:${recipientId}`).emit("new_message", {
+  //       sosId,
+  //       message: formattedMessage,
+  //     });
+
+  //     // Emit to sender (for multi-device sync)
+  //     io.to(`user:${senderId}`).emit("message_sent", {
+  //       sosId,
+  //       message: formattedMessage,
+  //     });
+
+  //     return formattedMessage;
+  //   } catch (error) {
+  //     console.error("Send message error:", error);
+  //     throw error;
+  //   }
+  // }
 
   /* ============================================
      GET CONVERSATION MESSAGES
   ============================================ */
-  static async getConversationMessages(sosId, userId, userType, page = 1, limit = 100) {
+  static async getConversationMessages(
+    sosId,
+    userId,
+    userType,
+    page = 1,
+    limit = 100,
+  ) {
     try {
-      // 1. Check permissions
       const permission = await MessagingModel.isMessagingAllowed(
         sosId,
         userId,
         userType,
       );
 
-      if (!permission.allowed) {
+      // If SOS not found or unauthorized, throw error
+      if (permission.code === "NOT_FOUND") {
+        throw { status: 404, message: permission.reason };
+      }
+      if (permission.code === "UNAUTHORIZED") {
         throw { status: 403, message: permission.reason };
       }
 
-      // 2. Get messages
+      // Get messages regardless of messaging disabled status
       const offset = (page - 1) * limit;
       const messages = await MessagingModel.getConversationMessages(
         sosId,
@@ -87,10 +146,7 @@ export class MessagingService {
         offset,
       );
 
-      // 3. Mark messages as read
-      await MessagingModel.markMessagesAsRead(sosId, userId, userType);
-
-      // 4. Get conversation info
+      // Get conversation info
       const conversationInfo = await MessagingModel.getConversationInfo(sosId);
 
       return {
@@ -109,7 +165,7 @@ export class MessagingService {
                 avatar: conversationInfo.admin_avatar,
               }
             : null,
-          messagingEnabled: permission.allowed,
+          messagingEnabled: permission.allowed, // true only if ALLOWED
         },
         messages: messages.map(formatMessage),
       };
@@ -118,6 +174,58 @@ export class MessagingService {
       throw error;
     }
   }
+  // static async getConversationMessages(sosId, userId, userType, page = 1, limit = 100) {
+  //   try {
+  //     // 1. Check permissions
+  //     const permission = await MessagingModel.isMessagingAllowed(
+  //       sosId,
+  //       userId,
+  //       userType,
+  //     );
+
+  //     if (!permission.allowed) {
+  //       throw { status: 403, message: permission.reason };
+  //     }
+
+  //     // 2. Get messages
+  //     const offset = (page - 1) * limit;
+  //     const messages = await MessagingModel.getConversationMessages(
+  //       sosId,
+  //       limit,
+  //       offset,
+  //     );
+
+  //     // 3. Mark messages as read
+  //     await MessagingModel.markMessagesAsRead(sosId, userId, userType);
+
+  //     // 4. Get conversation info
+  //     const conversationInfo = await MessagingModel.getConversationInfo(sosId);
+
+  //     return {
+  //       conversationInfo: {
+  //         sosId: conversationInfo.sos_id,
+  //         status: conversationInfo.status,
+  //         user: {
+  //           id: conversationInfo.user_id,
+  //           name: conversationInfo.user_name,
+  //           avatar: conversationInfo.user_avatar,
+  //         },
+  //         admin: conversationInfo.acknowledged_by
+  //           ? {
+  //               id: conversationInfo.acknowledged_by,
+  //               name: conversationInfo.admin_name,
+  //               avatar: conversationInfo.admin_avatar,
+  //             }
+  //           : null,
+  //         messagingEnabled: permission.allowed,
+  //       },
+  //       messages: messages.map(formatMessage),
+  //     };
+  //   } catch (error) {
+  //     console.error("Get conversation messages error:", error);
+  //     throw error;
+  //   }
+  // }
 
   /* ============================================
      GET USER CONVERSATIONS (List)
@@ -161,23 +269,22 @@ export class MessagingService {
   ============================================ */
   static async markConversationAsRead(sosId, userId, userType) {
     try {
-      // Check permissions
       const permission = await MessagingModel.isMessagingAllowed(
         sosId,
         userId,
         userType,
       );
-
-      if (!permission.allowed) {
+      if (permission.code === "NOT_FOUND") {
+        throw { status: 404, message: permission.reason };
+      }
+      if (permission.code === "UNAUTHORIZED") {
         throw { status: 403, message: permission.reason };
       }
 
       await MessagingModel.markMessagesAsRead(sosId, userId, userType);
 
-      // Emit to user's room (update unread count in real-time)
       const io = getIO();
       const unreadCount = await this.getUnreadCount(userId, userType);
-
       io.to(`user:${userId}`).emit("unread_count_updated", {
         count: unreadCount,
       });
@@ -188,6 +295,35 @@ export class MessagingService {
       throw error;
     }
   }
+  // static async markConversationAsRead(sosId, userId, userType) {
+  //   try {
+  //     // Check permissions
+  //     const permission = await MessagingModel.isMessagingAllowed(
+  //       sosId,
+  //       userId,
+  //       userType,
+  //     );
+
+  //     if (!permission.allowed) {
+  //       throw { status: 403, message: permission.reason };
+  //     }
+
+  //     await MessagingModel.markMessagesAsRead(sosId, userId, userType);
+
+  //     // Emit to user's room (update unread count in real-time)
+  //     const io = getIO();
+  //     const unreadCount = await this.getUnreadCount(userId, userType);
+
+  //     io.to(`user:${userId}`).emit("unread_count_updated", {
+  //       count: unreadCount,
+  //     });
+
+  //     return { message: "Conversation marked as read" };
+  //   } catch (error) {
+  //     console.error("Mark conversation as read error:", error);
+  //     throw error;
+  //   }
+  // }
 
   /* ============================================
      HANDLE TYPING INDICATOR (WebSocket only)

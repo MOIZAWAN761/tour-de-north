@@ -464,6 +464,7 @@ export const AuthController = {
   ============================================ */
   async login(req, res, next) {
     try {
+      console.log(req.body);
       const { identifier, password, deviceId, firebaseIdToken } = req.body;
 
       const platform = req.headers["x-platform"] || "unknown";

@@ -97,8 +97,6 @@ export const PanicAlarmModel = {
         u.name as user_name,
         u.phone as user_phone,
         u.email as user_email,
-        u.blood_type,
-        u.medical_conditions,
         a.name as acknowledged_by_name,
         a.phone as acknowledged_by_phone
       FROM sos_alarms s
@@ -343,23 +341,25 @@ export const PanicAlarmModel = {
   /* ============================================
      UPDATE SOS STATUS
   ============================================ */
+  /* ============================================
+   UPDATE SOS STATUS
+============================================ */
   async updateSOSStatus(sosId, status) {
     const query = `
-      UPDATE sos_alarms
-      SET 
-        status = $1,
-        responded_at = CASE WHEN $1 = 'responding' THEN NOW() ELSE responded_at END,
-        resolved_at = CASE WHEN $1 = 'resolved' THEN NOW() ELSE resolved_at END,
-        cancelled_at = CASE WHEN $1 = 'cancelled' THEN NOW() ELSE cancelled_at END,
-        updated_at = NOW()
-      WHERE id = $2
-      RETURNING *;
-    `;
+    UPDATE sos_alarms
+    SET 
+      status = $1::text,
+      responded_at = CASE WHEN $1::text = 'responding' THEN NOW() ELSE responded_at END,
+      resolved_at = CASE WHEN $1::text = 'resolved' THEN NOW() ELSE resolved_at END,
+      cancelled_at = CASE WHEN $1::text = 'cancelled' THEN NOW() ELSE cancelled_at END,
+      updated_at = NOW()
+    WHERE id = $2
+    RETURNING *;
+  `;
 
     const { rows } = await pool.query(query, [status, sosId]);
     return rows[0];
   },
-
   /* ============================================
      RESOLVE SOS
   ============================================ */
@@ -531,20 +531,19 @@ export const PanicAlarmModel = {
   /* ============================================
      OUTBOX - UPDATE STATUS
   ============================================ */
-  async updateOutboxStatus(id, status, errorMessage = null) {
-    const query = `
-      UPDATE outbox
-      SET 
-        status = $1,
-        retry_count = CASE WHEN $1 = 'failed' THEN retry_count + 1 ELSE retry_count END,
-        error_message = $2,
-        processed_at = CASE WHEN $1 = 'processed' THEN NOW() ELSE processed_at END,
-        next_retry_at = CASE WHEN $1 = 'failed' THEN NOW() + INTERVAL '5 minutes' ELSE next_retry_at END
-      WHERE id = $3;
-    `;
-
-    await pool.query(query, [status, errorMessage, id]);
-  },
+ async updateOutboxStatus(id, status, errorMessage = null) {
+  const query = `
+    UPDATE outbox
+    SET 
+      status = $1::text,
+      retry_count = CASE WHEN $1::text = 'failed' THEN retry_count + 1 ELSE retry_count END,
+      error_message = $2,
+      processed_at = CASE WHEN $1::text = 'processed' THEN NOW() ELSE processed_at END,
+      next_retry_at = CASE WHEN $1::text = 'failed' THEN NOW() + INTERVAL '5 minutes' ELSE next_retry_at END
+    WHERE id = $3;
+  `;
+  await pool.query(query, [status, errorMessage, id]);
+},
 
   /* ============================================
      STATISTICS (Super Admin)

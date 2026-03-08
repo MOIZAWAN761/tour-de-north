@@ -75,6 +75,7 @@ export class PanicAlarmService {
           "sos:created",
           JSON.stringify({
             sos_id: sos.id,
+            user_id: userId,
             user: {
               id: userId,
               name: userQuery.user_name,
@@ -202,6 +203,7 @@ export class PanicAlarmService {
           "sos:created",
           JSON.stringify({
             sos_id: sos.id,
+            user_id: userId,
             user: {
               id: userId,
               name: userQuery.user_name,
@@ -338,7 +340,7 @@ export class PanicAlarmService {
       throw { status: 404, message: "SOS not found" };
     }
 
-    if (userRole === "tourist") {
+    if (userRole === "user") {
       if (sos.user_id !== userId) {
         throw { status: 403, message: "Access denied" };
       }

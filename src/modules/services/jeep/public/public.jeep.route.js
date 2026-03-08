@@ -5,8 +5,14 @@ import { JeepsPublicController } from "./public.jeep.controller.js";
 import { validateJeepId, validateGetAllJeeps } from "../jeep.validation.js";
 import { param } from "express-validator";
 import { handleValidationErrors } from "../jeep.validation.js";
+import { authenticate } from "../../../../middlewares/auth.middleware.js";
 
 const router = express.Router();
+
+/* ============================================
+   ALL ROUTES REQUIRE AUTHENTICATION
+============================================ */
+router.use(authenticate);
 
 /* ============================================
    PUBLIC JEEP ROUTES (USERS)

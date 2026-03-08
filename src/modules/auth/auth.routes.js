@@ -23,7 +23,7 @@ const router = Router();
 // Signup - Rate limit: 5 requests per 15 minutes per IP
 router.post(
   "/signup",
-  rateLimiter({ windowMs: 15 * 60 * 1000, max: 5 }),
+  rateLimiter({ windowMs: 15 * 60 * 1000, max: 50 }),
   validateSignup,
   AuthController.signup
 );
@@ -31,7 +31,7 @@ router.post(
 // Login - Rate limit: 10 requests per 15 minutes per IP
 router.post(
   "/login",
-  rateLimiter({ windowMs: 15 * 60 * 1000, max: 10 }),
+  rateLimiter({ windowMs: 15 * 60 * 1000, max: 100 }),
   validateLogin,
   AuthController.login
 );
@@ -47,7 +47,7 @@ router.post(
 // Refresh token - Rate limit: 20 requests per 15 minutes
 router.post(
   "/refresh-token",
-  rateLimiter({ windowMs: 15 * 60 * 1000, max: 20 }),
+  rateLimiter({ windowMs: 15 * 60 * 1000, max: 200 }),
   validateRefreshToken,
   AuthController.refreshToken
 );

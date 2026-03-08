@@ -5,15 +5,17 @@ import admin from "../../config/firebase.js";
 /* ============================================
    SEND FCM NOTIFICATION (Single device)
 ============================================ */
+
+// src/modules/notification/notification.helper.js
+
 export async function sendFCMNotification(token, notification, data = {}) {
   try {
+    // ✅ Data‑only message – title/body go inside data
     const message = {
       token,
-      notification: {
+      data: {
         title: notification.title,
         body: notification.body,
-      },
-      data: {
         ...data,
         click_action: "FLUTTER_NOTIFICATION_CLICK",
       },
@@ -42,12 +44,8 @@ export async function sendFCMNotification(token, notification, data = {}) {
   }
 }
 
-/* ============================================
-   SEND FCM BATCH (Multiple devices)
-============================================ */
 export async function sendFCMBatch(tokens, notification, data = {}) {
   try {
-    // Firebase supports max 500 tokens per batch
     const BATCH_SIZE = 500;
     const batches = [];
 
@@ -64,11 +62,9 @@ export async function sendFCMBatch(tokens, notification, data = {}) {
     for (const batch of batches) {
       const message = {
         tokens: batch,
-        notification: {
+        data: {
           title: notification.title,
           body: notification.body,
-        },
-        data: {
           ...data,
           click_action: "FLUTTER_NOTIFICATION_CLICK",
         },
@@ -94,7 +90,6 @@ export async function sendFCMBatch(tokens, notification, data = {}) {
       results.successCount += response.successCount;
       results.failureCount += response.failureCount;
 
-      // Collect failed tokens
       response.responses.forEach((resp, idx) => {
         if (!resp.success) {
           results.errors.push({
@@ -115,6 +110,117 @@ export async function sendFCMBatch(tokens, notification, data = {}) {
     };
   }
 }
+
+// export async function sendFCMNotification(token, notification, data = {}) {
+//   try {
+//     const message = {
+//       token,
+//       notification: {
+//         title: notification.title,
+//         body: notification.body,
+//       },
+//       data: {
+//         ...data,
+//         click_action: "FLUTTER_NOTIFICATION_CLICK",
+//       },
+//       android: {
+//         priority: "high",
+//         notification: {
+//           sound: "default",
+//           channelId: data.type || "default",
+//         },
+//       },
+//       apns: {
+//         payload: {
+//           aps: {
+//             sound: "default",
+//             badge: 1,
+//           },
+//         },
+//       },
+//     };
+
+//     const response = await admin.messaging().send(message);
+//     return { success: true, messageId: response };
+//   } catch (error) {
+//     console.error("FCM send error:", error);
+//     return { success: false, error: error.message };
+//   }
+// }
+
+// /* ============================================
+//    SEND FCM BATCH (Multiple devices)
+// ============================================ */
+// export async function sendFCMBatch(tokens, notification, data = {}) {
+//   try {
+//     // Firebase supports max 500 tokens per batch
+//     const BATCH_SIZE = 500;
+//     const batches = [];
+
+//     for (let i = 0; i < tokens.length; i += BATCH_SIZE) {
+//       batches.push(tokens.slice(i, i + BATCH_SIZE));
+//     }
+
+//     const results = {
+//       successCount: 0,
+//       failureCount: 0,
+//       errors: [],
+//     };
+
+//     for (const batch of batches) {
+//       const message = {
+//         tokens: batch,
+//         notification: {
+//           title: notification.title,
+//           body: notification.body,
+//         },
+//         data: {
+//           ...data,
+//           click_action: "FLUTTER_NOTIFICATION_CLICK",
+//         },
+//         android: {
+//           priority: "high",
+//           notification: {
+//             sound: "default",
+//             channelId: data.type || "default",
+//           },
+//         },
+//         apns: {
+//           payload: {
+//             aps: {
+//               sound: "default",
+//               badge: 1,
+//             },
+//           },
+//         },
+//       };
+
+//       const response = await admin.messaging().sendEachForMulticast(message);
+
+//       results.successCount += response.successCount;
+//       results.failureCount += response.failureCount;
+
+//       // Collect failed tokens
+//       response.responses.forEach((resp, idx) => {
+//         if (!resp.success) {
+//           results.errors.push({
+//             token: batch[idx],
+//             error: resp.error?.message,
+//           });
+//         }
+//       });
+//     }
+
+//     return results;
+//   } catch (error) {
+//     console.error("FCM batch send error:", error);
+//     return {
+//       successCount: 0,
+//       failureCount: tokens.length,
+//       errors: [{ error: error.message }],
+//     };
+//   }
+// }
 
 /* ============================================
    FORMAT NOTIFICATION DATA
@@ -198,20 +304,35 @@ function getCategoryTitle(category) {
    BUILD FCM PAYLOAD
 ============================================ */
 export function buildFCMPayload(notification) {
+  // Convert all data values to strings recursively
+  const stringifyData = (obj) => {
+    if (!obj) return {};
+    const result = {};
+    Object.entries(obj).forEach(([key, value]) => {
+      if (value === null || value === undefined) {
+        result[key] = "";
+      } else if (typeof value === "object") {
+        result[key] = JSON.stringify(value);
+      } else {
+        result[key] = String(value);
+      }
+    });
+    return result;
+  };
+
   return {
     title: notification.title,
     body: notification.body,
     data: {
       type: notification.type,
       category: notification.category,
-      notification_id: notification.id.toString(),
-      sos_id: notification.sos_id ? notification.sos_id.toString() : "",
+      notification_id: String(notification.id),
+      sos_id: notification.sosId ? String(notification.sosId) : "",
       priority: notification.priority,
-      ...(notification.data || {}),
+      ...stringifyData(notification.data || {}),
     },
   };
 }
-
 /* ============================================
    VALIDATE NOTIFICATION DATA
 ============================================ */
