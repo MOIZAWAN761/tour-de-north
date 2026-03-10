@@ -1,5 +1,17 @@
 import dotenv from 'dotenv';
 dotenv.config();
+console.log("🔍 All env keys:", Object.keys(process.env));
+console.log(
+  "🔍 FIREBASE_PRIVATE_KEY exists?",
+  process.env.FIREBASE_PRIVATE_KEY ? "YES" : "NO",
+);
+if (process.env.FIREBASE_PRIVATE_KEY) {
+  console.log(
+    "🔍 FIREBASE_PRIVATE_KEY length:",
+    process.env.FIREBASE_PRIVATE_KEY.length,
+  );
+}
+
 
 export const {
   PORT,
