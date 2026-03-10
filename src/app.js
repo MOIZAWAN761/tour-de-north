@@ -23,6 +23,27 @@ import {
 
 /* ---------------- CREATE APP ---------------- */
 const app = express();
+const allowedOrigins = [
+  "https://tour-de-north-frontend.vercel.app",
+  "http://localhost:5173", // for local Vite dev
+  "http://localhost:3000", // alternative local port
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) === -1) {
+        const msg =
+          "The CORS policy for this site does not allow access from the specified Origin.";
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
+    credentials: true, // if you need to send cookies/auth headers
+  }),
+);
 
 /* ---------------- GLOBAL MIDDLEWARES ---------------- */
 
