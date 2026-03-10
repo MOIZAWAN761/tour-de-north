@@ -1,17 +1,24 @@
-// config/firebase.js
 // src/config/firebase.js
 import admin from "firebase-admin";
-import fs from "fs";
-import path from "path";
+import {
+  FIREBASE_PROJECT_ID,
+  FIREBASE_CLIENT_EMAIL,
+  FIREBASE_PRIVATE_KEY,
+  FIREBASE_STORAGE_BUCKET,
+} from "./env.js";
 
-// Path to your service account JSON
-const serviceAccountPath = path.resolve(
-  "src/config/mansehra-police-tourist-88e9e-firebase-adminsdk-fbsvc-ec2da30244.json"
-);
-const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf-8"));
+// Convert the private key string: replace '\n' with actual line breaks
+const privateKey = FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n");
+
+const serviceAccount = {
+  projectId: FIREBASE_PROJECT_ID,
+  clientEmail: FIREBASE_CLIENT_EMAIL,
+  privateKey: privateKey,
+};
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
+  storageBucket: FIREBASE_STORAGE_BUCKET, // optional
 });
 
 export default admin;
