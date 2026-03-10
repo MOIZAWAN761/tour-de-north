@@ -28,12 +28,12 @@ const app = express();
 
 // Enable CORS (mobile app + admin panel)
 // 
-app.use(
-  cors({
-    origin: "http://localhost:5173", // frontend URL
-    credentials: true, // if using cookies or auth headers
-  }),
-);
+// app.use(
+//   cors({
+//     origin: "http://localhost:5173", // frontend URL
+//     credentials: true, // if using cookies or auth headers
+//   }),
+// );
 
 // Parse incoming JSON
 app.use(express.json());
